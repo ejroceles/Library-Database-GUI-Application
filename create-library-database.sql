@@ -1,0 +1,75 @@
+DROP DATABASE IF EXISTS LIBRARY;
+
+CREATE DATABASE LIBRARY;
+
+USE LIBRARY;
+
+DROP TABLE IF EXISTS BOOK;
+CREATE TABLE BOOK (
+    Isbn    CHAR(10) NOT NULL,
+    Title   VARCHAR(255) NOT NULL,
+    CONSTRAINT pk_book PRIMARY KEY (Isbn)
+);
+
+DROP TABLE IF EXISTS AUTHORS;
+CREATE TABLE AUTHORS (
+    Author_id   INT AUTO_INCREMENT NOT NULL,
+    Name        VARCHAR(50) NOT NULL,
+    CONSTRAINT pk_authors PRIMARY KEY (Author_id)
+);
+
+DROP TABLE IF EXISTS BOOK_AUTHORS;
+CREATE TABLE BOOK_AUTHORS (
+    Author_id   INT NOT NULL,
+    Isbn        CHAR(10) NOT NULL,
+    CONSTRAINT pk_book_authors PRIMARY KEY (Author_id, Isbn),
+    CONSTRAINT fk_book_authors_authors FOREIGN KEY (Author_id) REFERENCES AUTHORS(Author_id),
+    CONSTRAINT fk_book_authors_book FOREIGN KEY (Isbn) REFERENCES BOOK(Isbn)
+);
+
+DROP TABLE IF EXISTS BORROWER;
+CREATE TABLE BORROWER (
+    Card_id     CHAR(8) NOT NULL,
+    Ssn         CHAR(11) NOT NULL,
+    Bname       VARCHAR(50) NOT NULL,
+    Address     VARCHAR(50) NOT NULL,
+    Phone       CHAR(14),
+    CONSTRAINT pk_borrower PRIMARY KEY (Card_id),
+    CONSTRAINT uk_ssn UNIQUE(Ssn)
+);
+
+DROP TABLE IF EXISTS BOOK_LOANS;
+CREATE TABLE BOOK_LOANS (
+    Loan_id     INT AUTO_INCREMENT NOT NULL,
+    Isbn        VARCHAR(10) NOT NULL,
+    Card_id     CHAR(8) NOT NULL,
+    Date_out    Date,
+    Due_date    Date,
+    Date_in     Date,
+    CONSTRAINT pk_book_loans PRIMARY KEY (Loan_id),
+    CONSTRAINT fk_book_loans_book FOREIGN KEY (Isbn) REFERENCES BOOK(Isbn),
+    CONSTRAINT fk_book_loans_borrower FOREIGN KEY (Card_id) REFERENCES BORROWER(Card_id)
+);
+
+DROP TABLE IF EXISTS FINES;
+CREATE TABLE FINES (
+    Loan_id     INT NOT NULL,
+    Fine_amt    DECIMAL(10,2) NOT NULL,
+    Paid        BOOLEAN NOT NULL,
+    CONSTRAINT pk_fines PRIMARY KEY (Loan_id),
+    CONSTRAINT fk_fines_book_loans FOREIGN KEY (Loan_id) REFERENCES BOOK_LOANS(Loan_id) 
+);
+
+SET GLOBAL local_infile = 1; # Used in case loading local data is disabled
+
+LOAD DATA LOCAL INFILE 
+'/Users/ejroceles/CS6360/Project1/BOOK.csv' INTO TABLE BOOK FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'(Isbn,Title);
+
+LOAD DATA LOCAL INFILE 
+'/Users/ejroceles/CS6360/Project1/AUTHORS.csv' INTO TABLE AUTHORS FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'(Author_id,Name);
+
+LOAD DATA LOCAL INFILE 
+'/Users/ejroceles/CS6360/Project1/BOOK_AUTHORS.csv' INTO TABLE BOOK_AUTHORS FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'(Author_id,Isbn);
+
+LOAD DATA LOCAL INFILE 
+'/Users/ejroceles/CS6360/Project1/BORROWER.csv' INTO TABLE BORROWER FIELDS TERMINATED BY ';' LINES TERMINATED BY '\n'(Card_id,Ssn,Bname,Address,Phone);
